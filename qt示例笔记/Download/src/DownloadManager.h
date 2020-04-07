@@ -7,23 +7,36 @@
 
 class QNetworkAccessManager;
 class QNetworkReply;
+class QIODevice;
+
+struct ReplyData
+{
+	QString fileName;
+	QNetworkReply* reply;
+};
 
 class DownloadManager : public QObject
 {
 	Q_OBJECT
 public:
 	explicit DownloadManager(QObject *parent = nullptr);
+
+	ReplyData doDownload(const QUrl &url);
+
+	void setSavePath(const QString& path);
+
+public slots:
 	void downloadFinished(QNetworkReply *reply);
-	void doDownload(const QUrl &url);
-	bool isHttpRedirect(QNetworkReply *reply);
+
 signals:
 
 private:
-	QString saveFileName(QUrl& url);
+	QString saveFileName(const QUrl& url);
+	bool isHttpRedirect(QNetworkReply *reply);
 	bool saveToDisk(const QString &filename, QIODevice *data);
 private:
 	QPointer<QNetworkAccessManager> manager;
-	QVector<QNetworkReply *> currentDownloads;
+	QString m_path;
 };
 
 #endif // DOWNLOADMANAGER_H
