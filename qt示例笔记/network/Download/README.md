@@ -4,6 +4,8 @@
 
 ## 演示
 
+![演示](./img/演示.gif)
+
 ## 代码解释
 
 &emsp;&emsp;这次的下载器代码比较核心代码比较简单，暂时只使用到了如下几个类
@@ -72,7 +74,7 @@ QNetworkAccessManager
         return true;
     }
 	```
-   
+  
 
 
 
@@ -81,3 +83,4 @@ QNetworkAccessManager
 1. 在接收到`QNetworkAccessManager`的`finished`信号后，删除`QNetworkReply`对象时要使用`deleteLater()`方法
 2. 要保证程序运行期间`QNetworkAccessManager`没有被析构，否则无法接收`finished`信号
 3. 在线程中处理`QNetworkAccessManager`的`finished`信号时，要启用消息循环，否则无法接收`finished`信号
+4. 在`Linux`下编辑文本，程序读出的换行符为` \n`,但在`windows`下程序读出的换行符为`\r\n`
