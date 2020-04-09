@@ -54,8 +54,8 @@
 #include "searchbox.h"
 #include "googlesuggest.h"
 
-const QString gsearchUrl = QStringLiteral("http://www.google.com/search?q=%1");
-
+//const QString gsearchUrl = QStringLiteral("http://www.google.com/search?q=%1");
+const QString gsearchUrl = QStringLiteral("https://www.baidu.com/s?wd=%1");
 //! [1]
 SearchBox::SearchBox(QWidget *parent): QLineEdit(parent)
 {

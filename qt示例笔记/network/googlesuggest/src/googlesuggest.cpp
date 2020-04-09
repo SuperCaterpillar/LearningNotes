@@ -51,9 +51,12 @@
 //! [1]
 #include "googlesuggest.h"
 #include <QNetworkProxy>
+#include <QJsonDocument>
+#include <QJsonArray>
+#include <QJsonObject>
 
-const QString gsuggestUrl(QStringLiteral("http://google.com/complete/search?output=toolbar&q=%1"));
-//const QString gsuggestUrl(QStringLiteral("https://www.baidu.com/sugrec?prod=pc&wd=%1"));
+//const QString gsuggestUrl(QStringLiteral("http://google.com/complete/search?output=toolbar&q=%1"));
+const QString gsuggestUrl(QStringLiteral("https://www.baidu.com/sugrec?prod=pc&wd=%1"));
 
 //! [1]
 
@@ -61,19 +64,26 @@ const QString gsuggestUrl(QStringLiteral("http://google.com/complete/search?outp
 GSuggestCompletion::GSuggestCompletion(QLineEdit *parent): QObject(parent), editor(parent)
 {
     popup = new QTreeWidget;
-    popup->setWindowFlags(Qt::Popup);
-    popup->setFocusPolicy(Qt::NoFocus);
-    popup->setFocusProxy(parent);
+	//不显示窗口标题栏
+	popup->setWindowFlags(Qt::Popup);
+	//没有焦点，确保焦点在主界面上
+	popup->setFocusPolicy(Qt::NoFocus);
+	//将popup的焦点事件交由parent处理
+	popup->setFocusProxy(parent);
+	//实时检查鼠标位置
     popup->setMouseTracking(true);
 
     popup->setColumnCount(1);
+	//各个item高度一致
     popup->setUniformRowHeights(true);
-    popup->setRootIsDecorated(false);
+	//是否可以展开显示子item
+	popup->setRootIsDecorated(false);
+	//不可以编辑
     popup->setEditTriggers(QTreeWidget::NoEditTriggers);
     popup->setSelectionBehavior(QTreeWidget::SelectRows);
-    popup->setFrameStyle(QFrame::Box | QFrame::Plain);
+	popup->setFrameStyle(QFrame::Box | QFrame::Plain);
     popup->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-    popup->header()->hide();
+	popup->header()->hide();
 
     popup->installEventFilter(this);
 
@@ -82,11 +92,17 @@ GSuggestCompletion::GSuggestCompletion(QLineEdit *parent): QObject(parent), edit
 
     timer.setSingleShot(true);
     timer.setInterval(500);
+	//在输入编辑内容时，每隔0.5秒查找一次
     connect(&timer, SIGNAL(timeout()), SLOT(autoSuggest()));
     connect(editor, SIGNAL(textEdited(QString)), &timer, SLOT(start()));
-	QNetworkProxy *proxy = new QNetworkProxy(QNetworkProxy::HttpProxy,"192.168.10.201",1081);
-	networkManager.setProxy(*proxy);
-    connect(&networkManager, SIGNAL(finished(QNetworkReply*)),
+
+//	//设置服务器代理，访问外网
+//	QNetworkProxy *proxy =
+//			new QNetworkProxy(QNetworkProxy::HttpProxy,"192.168.10.201",1081);
+//	networkManager.setProxy(*proxy);
+
+	//获取查找的数据
+	connect(&networkManager, SIGNAL(finished(QNetworkReply*)),
             this, SLOT(handleNetworkData(QNetworkReply*)));
 
 
@@ -161,9 +177,8 @@ void GSuggestCompletion::showCompletion(const QVector<QString> &choices)
 
     popup->setUpdatesEnabled(false);
     popup->clear();
-
     for (const auto &choice : choices) {
-        auto item  = new QTreeWidgetItem(popup);
+		auto item  = new QTreeWidgetItem(popup);
         item->setText(0, choice);
         item->setForeground(0, color);
     }
@@ -187,6 +202,7 @@ void GSuggestCompletion::doneCompletion()
     QTreeWidgetItem *item = popup->currentItem();
     if (item) {
         editor->setText(item->text(0));
+		//调用editer 的 returnPressed 信号
         QMetaObject::invokeMethod(editor, "returnPressed");
     }
 }
@@ -211,52 +227,29 @@ void GSuggestCompletion::preventSuggest()
 //! [9]
 void GSuggestCompletion::handleNetworkData(QNetworkReply *networkReply)
 {
-    QUrl url = networkReply->url();
     if (networkReply->error() == QNetworkReply::NoError) {
         QVector<QString> choices;
-		QString ss = "<toplevel>\
-				<CompleteSuggestion>\
-				<suggestion data=\"1\"/>\
-				</CompleteSuggestion>\
-				<CompleteSuggestion>\
-				<suggestion data=\"163\"/>\
-				</CompleteSuggestion>\
-				<CompleteSuggestion>\
-				<suggestion data=\"1688\"/>\
-				</CompleteSuggestion>\
-				<CompleteSuggestion>\
-				<suggestion data=\"123\"/>\
-				</CompleteSuggestion>\
-				<CompleteSuggestion>\
-				<suggestion data=\"12306\"/>\
-				</CompleteSuggestion>\
-				<CompleteSuggestion>\
-				<suggestion data=\"126邮箱\"/>\
-				</CompleteSuggestion>\
-				<CompleteSuggestion>\
-				<suggestion data=\"11\"/>\
-				</CompleteSuggestion>\
-				<CompleteSuggestion>\
-				<suggestion data=\"1917\"/>\
-				</CompleteSuggestion>\
-				<CompleteSuggestion>\
-				<suggestion data=\"1917 电影\"/>\
-				</CompleteSuggestion>\
-				<CompleteSuggestion>\
-				<suggestion data=\"14tv\"/>\
-				</CompleteSuggestion>\
-				</toplevel>";
 		QByteArray response(networkReply->readAll());
-        QXmlStreamReader xml(response);
-        while (!xml.atEnd()) {
-            xml.readNext();
-            if (xml.tokenType() == QXmlStreamReader::StartElement)
-                if (xml.name() == "suggestion") {
-                    QStringRef str = xml.attributes().value("data");
-                    choices << str.toString();
-                }
-        }
 
+		QJsonDocument doc(QJsonDocument::fromJson(response));
+		QJsonObject obj = doc.object();
+		if(obj.contains("g"))
+		{
+			QJsonArray arr = obj.value("g").toArray();
+			for (auto item : arr)
+			{
+				choices<< item.toObject().value("q").toString();
+			}
+		}
+//        QXmlStreamReader xml(response);
+//        while (!xml.atEnd()) {
+//            xml.readNext();
+//            if (xml.tokenType() == QXmlStreamReader::StartElement)
+//                if (xml.name() == "suggestion") {
+//                    QStringRef str = xml.attributes().value("data");
+//                    choices << str.toString();
+//                }
+//        }
         showCompletion(choices);
     }
 
