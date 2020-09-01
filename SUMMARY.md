@@ -29,4 +29,7 @@
       * [信号和槽](qml教程/语法/03信号和槽.md)
       * [QML与JS](qml教程/语法/04QML与JS.md)
       * [动态创建QML对象](qml教程/语法/05动态创建QML对象.md)
+      * [在QML中定义JavaScript资源](qml教程/语法/06在QML中定义JavaScript资源.md)
+      * [在QML中导入JavaScript资源](qml教程/语法/07在QML中导入JavaScript资源.md)
+      * [JavaScript主机环境](qml教程/语法/08JavaScript主机环境.md)
 
