@@ -1,6 +1,6 @@
 <RCC>
     <qresource prefix="/">
         <file>main.qml</file>
-        <file>myTreeView.qml</file>
+        <file>MyTreeView.qml</file>
     </qresource>
 </RCC>

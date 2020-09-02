@@ -32,4 +32,5 @@
       * [在QML中定义JavaScript资源](qml教程/语法/06在QML中定义JavaScript资源.md)
       * [在QML中导入JavaScript资源](qml教程/语法/07在QML中导入JavaScript资源.md)
       * [JavaScript主机环境](qml教程/语法/08JavaScript主机环境.md)
+      * [对象类型](qml教程/语法/09对象类型.md)
 
